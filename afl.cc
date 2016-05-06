@@ -1,6 +1,6 @@
 #include <string>
-#include <iostream>
 #include <math.h>
+#include <iostream>
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
@@ -459,7 +459,7 @@ class ComplexExt : public Complex {
 void afl_lambda() {
     auto func = [] (const string& str) {return str.find("org")!=string::npos;};
 
-    cout << func("wurldtech.org") << endl;
+    cout << func("tech.org") << endl;
     vector<int> v;
 
     v.push_back(1);
