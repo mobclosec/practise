@@ -62,10 +62,12 @@ int main_1()
 int main()
 {
     std::shared_ptr<Base> p = std::make_shared<Derived>();
-    std::shared_ptr<Base> p1(new Derived());
+    Derived* obj = new Derived();
+    // std::shared_ptr<Base> p1(obj);
+    std::shared_ptr<Base> p1;
+    p1 = std::make_shared<Derived>(*obj);
     cout << "p1.get()\n" << p1.get() << "p1.use_count()\n" << p1.use_count() << endl;
-    p1->print_out();
-    p->print_out();
+    cout << "obj addr\n" << obj << endl;
     
     return 0;
 }
