@@ -1,7 +1,7 @@
 PROGNAME    = sweet 
 VERSION     = 1.00
 
-PROGS       = afl signal
+PROGS       = afl signal sp
 
 CFLAGS     ?= -O3 -funroll-loops
 CFLAGS     += -Wall -D_FORTIFY_SOURCE=2 -g -Wno-pointer-sign
@@ -21,6 +21,9 @@ all: $(PROGS)
 
 afl:$(COMM_HDR)
 	$(CXX) $(CXXFLAGS) $@.cc -o $@
+
+sp:$(COMM_HDR)
+	$(CXX) $(CXXFLAGS) $@.cc -o $@ -lpthread
 
 signal:$(COMM_HDR)
 	$(CXX) $(CXXFLAGS) $@.cc -o $@

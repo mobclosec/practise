@@ -1488,7 +1488,91 @@ void aflmissingnum (int* data, int n, bool* extra, int k)
     // Restore the lowest bits again.
     for (int i = even; i < n; ++i) data[i] += 1;
 }
+ 
+class TempClass {
+public:
+    TempClass(): a(1), b(2), c(3) {}
+    TempClass(const TempClass& c);
+    TempClass(TempClass&& c);
+    TempClass& operator=(const TempClass& c);
+    TempClass& operator=(TempClass&& c);
+    virtual ~TempClass();
+private:
+    int a, b, c;
+};
 
+template<class T>
+void swap(T& a, T& b)
+{
+    T tmp(std::move(a));
+    a = std::move(b);
+    b = std::move(tmp);
+}
+
+#include <iostream>
+#include <memory>
+#include <utility>
+#include <array>
+
+struct A_Value {
+    A_Value(int&& n) { std::cout << "rvalue overload, n=" << n << "\n"; }
+    A_Value(int& n)  { std::cout << "lvalue overload, n=" << n << "\n"; }
+};
+
+class B_Value {
+public:
+    template<class T1, class T2, class T3>
+    B_Value(T1&& t1, T2&& t2, T3&& t3) :
+        a1_{std::forward<T1>(t1)},
+        a2_{std::forward<T2>(t2)},
+        a3_{std::forward<T3>(t3)}
+    {
+    }
+
+private:
+    A_Value a1_, a2_, a3_;
+};
+
+template<typename T, typename U>
+std::unique_ptr<T> make_unique1(U&& u)
+{
+    return std::unique_ptr<T>(new T(std::forward<U>(u)));
+}
+
+template<class T, class... U>
+std::unique_ptr<T> make_unique(U&&... u)
+{
+    return std::unique_ptr<T>(new T(std::forward<U>(u)...));
+}
+
+int main()
+{
+    std::unique_ptr<A_Value> p1 = make_unique1<A_Value>(2); // rvalue
+    int i = 1;
+    std::unique_ptr<A_Value> p2 = make_unique1<A_Value>(i); // lvalue
+
+    std::cout << "B\n";
+    std::unique_ptr<B_Value> t = make_unique<B_Value>(2, i, 3);
+
+    std::cout << "Second Part == Move\n";
+    std::string str = "Hello";
+    std::vector<std::string> v;
+
+    // uses the push_back(const T&) overload, which means 
+    // we'll incur the cost of copying str
+    v.push_back(str);
+    std::cout << "After copy, str is \"" << str << "\"\n";
+
+    // uses the rvalue reference push_back(T&&) overload, 
+    // which means no strings will be copied; instead, the contents
+    // of str will be moved into the vector.  This is less
+    // expensive, but also means str might now be empty.
+    v.push_back(std::move(str));
+    std::cout << "After move, str is \"" << str << "\"\n";
+
+    std::cout << "The contents of the vector are \"" << v[0]
+                                         << "\", \"" << v[1] << "\"\n";
+}
 
 struct Data {
     Data(string k, uint32_t v) : name(k), value(v) {}
@@ -1639,7 +1723,7 @@ void afl_process_string_concat(vector<string>& words)
 
 }
 
-int main()
+int afl_process_concat_main()
 {
     vector<string> words;
     string file_name = "word.txt";
@@ -1657,6 +1741,8 @@ int main()
 
     ifp.close();
     afl_process_string_concat(words);
+
+    return 0;
 }
 
 bool afl_one_letter_diff(string src, string dst)
